@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Algoritmos Fundamentais</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#181C24; --panel:#20242E; --panel2:#262B37; --line:#333947;
+  --text:#E7E9EE; --muted:#8992A3; --gold:#D9A441; --teal:#4F9DA6; --bad:#D9705A;
+  --font-display:'Space Grotesk', system-ui, sans-serif;
+  --font-mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F3F1EC; --panel:#FFFFFF; --panel2:#ECE9E1; --line:#DAD5C8;
+    --text:#1C1E22; --muted:#6B6F76; --gold:#B9791E; --teal:#2E7C86; --bad:#B23F27;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181C24; --panel:#20242E; --panel2:#262B37; --line:#333947;
+  --text:#E7E9EE; --muted:#8992A3; --gold:#D9A441; --teal:#4F9DA6; --bad:#D9705A;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-display);
+  -webkit-font-smoothing:antialiased;
+}
+.app{ max-width:1100px; margin:0 auto; padding:28px 20px 60px; }
+header.top{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+  margin-bottom:22px; flex-wrap:wrap;
+}
+h1{ font-size:26px; margin:0 0 4px; letter-spacing:-0.01em; }
+.sub{ color:var(--muted); font-size:14px; max-width:52ch; line-height:1.5; margin:0; }
+.layout{ display:grid; grid-template-columns:200px 1fr; gap:18px; }
+@media (max-width:720px){ .layout{ grid-template-columns:1fr; } }
+
+nav.tabs{
+  display:flex; flex-direction:column; gap:4px;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px;
+  height:fit-content;
+}
+@media (max-width:720px){
+  nav.tabs{ flex-direction:row; overflow-x:auto; scroll-padding-top:env(safe-area-inset-top,0px); }
+}
+nav.tabs button{
+  all:unset; cursor:pointer; padding:10px 12px; border-radius:7px;
+  font-size:13.5px; color:var(--muted); white-space:nowrap;
+  display:flex; align-items:center; gap:8px;
+}
+nav.tabs button .n{ font-family:var(--font-mono); font-size:11px; color:var(--muted); opacity:0.6; }
+nav.tabs button:hover{ background:var(--panel2); color:var(--text); }
+nav.tabs button.active{ background:var(--panel2); color:var(--text); box-shadow:inset 3px 0 0 var(--gold); }
+nav.tabs button.active .n{ color:var(--gold); opacity:1; }
+
+main.stage{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:22px 24px; min-width:0;
+}
+.stage h2{ margin:0 0 6px; font-size:20px; }
+.desc{ color:var(--muted); font-size:14px; line-height:1.55; margin:0 0 18px; max-width:70ch; }
+
+.controls{ display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:18px; }
+.field{ display:flex; flex-direction:column; gap:5px; }
+.field label{ font-size:11.5px; color:var(--muted); }
+.field input{
+  background:var(--bg); border:1px solid var(--line); color:var(--text);
+  border-radius:6px; padding:8px 10px; font-family:var(--font-mono); font-size:13.5px;
+  width:220px; max-width:60vw;
+}
+.field input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+button.run{
+  all:unset; cursor:pointer; background:var(--gold); color:#1C1A12;
+  padding:9px 18px; border-radius:6px; font-weight:600; font-size:13.5px;
+}
+button.run:hover{ filter:brightness(1.06); }
+button.run:focus-visible{ outline:2px solid var(--text); outline-offset:2px; }
+.err{ color:var(--bad); font-size:13px; margin:-8px 0 14px; }
+
+.viz{ min-height:56px; display:flex; align-items:flex-end; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.bar{
+  background:var(--teal); border-radius:3px 3px 0 0; width:26px;
+  display:flex; align-items:flex-start; justify-content:center; color:#0C1013;
+  font-family:var(--font-mono); font-size:11px; padding-top:3px; transition:height .25s ease, background .2s ease;
+}
+.bar.hit{ background:var(--gold); }
+
+.out{
+  background:var(--bg); border:1px solid var(--line); border-radius:8px;
+  padding:14px 16px; font-family:var(--font-mono); font-size:13.5px;
+  color:var(--text); min-height:20px; white-space:pre-wrap; word-break:break-word;
+}
+.out .muted{ color:var(--muted); }
+
+details.code{ margin-top:18px; }
+details.code summary{ cursor:pointer; font-size:12.5px; color:var(--muted); user-select:none; }
+details.code pre{
+  margin:10px 0 0; background:var(--bg); border:1px solid var(--line); border-radius:8px;
+  padding:14px 16px; overflow-x:auto; font-family:var(--font-mono); font-size:12.5px; line-height:1.6;
+  color:var(--text);
+}
+.kw{color:var(--teal);} .num{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>Algoritmos Fundamentais</h1>
+      <p class="sub">Seis algoritmos clássicos de programação, prontos para rodar com seus próprios valores. Escolha um à esquerda, ajuste a entrada e execute.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="tabs" id="tabs"></nav>
+    <main class="stage" id="stage"></main>
+  </div>
+</div>
+
+<script>
+const algos = [
+  {
+    id:"contagem", label:"Contagem", n:"01",
+    title:"Contagem de ocorrências",
+    desc:"Percorre uma lista e conta quantas vezes um valor aparece.",
+    fields:[
+      {key:"lista", label:"Lista (separada por vírgula)", value:"3, 7, 3, 9, 3, 5, 7, 3"},
+      {key:"alvo", label:"Valor procurado", value:"3"}
+    ],
+    run(vals, viz, out){
+      const lista = parseList(vals.lista);
+      const alvo = Number(vals.alvo);
+      if(lista.some(isNaN) || isNaN(alvo)) throw new Error("Use apenas números.");
+      let contador = 0;
+      const hits = lista.map(v => v === alvo);
+      for(const h of hits) if(h) contador++;
+      renderBars(viz, lista, hits, (v)=>v);
+      out.innerHTML = `O valor <b>${alvo}</b> aparece <b>${contador}</b> ${contador===1?"vez":"vezes"}.`;
+    },
+    code:`let lista = [3, 7, 3, 9, 3, 5, 7, 3];
+let valorProcurado = 3;
+let contador = 0;
+
+for (let i = 0; i < lista.length; i++) {
+    if (lista[i] === valorProcurado) {
+        contador = contador + 1;
+    }
+}
+
+console.log("O valor " + valorProcurado + " aparece " + contador + " vezes");`
+  },
+  {
+    id:"fibonacci", label:"Fibonacci", n:"02",
+    title:"Sequência de Fibonacci",
+    desc:"Gera os N primeiros termos, onde cada número é a soma dos dois anteriores.",
+    fields:[{key:"n", label:"Quantidade de termos (N)", value:"10"}],
+    run(vals, viz, out){
+      const n = parseInt(vals.n, 10);
+      if(isNaN(n) || n < 1 || n > 30) throw new Error("Escolha um N entre 1 e 30.");
+      const fib = [0,1];
+      for(let i=2;i<n;i++) fib[i] = fib[i-1] + fib[i-2];
+      fib.length = n;
+      renderBars(viz, fib, fib.map(()=>false), (v)=>v);
+      out.textContent = fib.join(", ");
+    },
+    code:`let n = 10;
+let fibonacci = [];
+
+fibonacci[0] = 0;
+fibonacci[1] = 1;
+
+for (let i = 2; i < n; i++) {
+    fibonacci[i] = fibonacci[i - 1] + fibonacci[i - 2];
+}
+
+for (let i = 0; i < n; i++) {
+    console.log(fibonacci[i]);
+}`
+  },
+  {
+    id:"mdc", label:"MDC", n:"03",
+    title:"Máximo Divisor Comum",
+    desc:"Testa cada número até o menor dos dois valores para achar o maior divisor comum a ambos.",
+    fields:[
+      {key:"a", label:"Primeiro número", value:"48"},
+      {key:"b", label:"Segundo número", value:"18"}
+    ],
+    run(vals, viz, out){
+      const a = parseInt(vals.a,10), b = parseInt(vals.b,10);
+      if(isNaN(a)||isNaN(b)||a<1||b<1) throw new Error("Use dois inteiros positivos.");
+      let mdc = 1;
+      const menor = Math.min(a,b);
+      for(let i=1;i<=menor;i++) if(a%i===0 && b%i===0) mdc = i;
+      viz.innerHTML = "";
+      out.innerHTML = `O MDC de <b>${a}</b> e <b>${b}</b> é <b>${mdc}</b>.`;
+    },
+    code:`let a = 48;
+let b = 18;
+let mdc = 1;
+
+let menor = a;
+if (b < a) {
+    menor = b;
+}
+
+for (let i = 1; i <= menor; i++) {
+    if (a % i === 0 && b % i === 0) {
+        mdc = i;
+    }
+}
+
+console.log("O MDC é " + mdc);`
+  },
+  {
+    id:"primo", label:"Número Primo", n:"04",
+    title:"Verificação de número primo",
+    desc:"Testa se um número tem algum divisor entre 2 e sua raiz quadrada.",
+    fields:[{key:"numero", label:"Número", value:"29"}],
+    run(vals, viz, out){
+      const numero = parseInt(vals.numero,10);
+      if(isNaN(numero)) throw new Error("Digite um número inteiro.");
+      let ehPrimo = true;
+      if(numero < 2) ehPrimo = false;
+      else{
+        for(let i=2;i<=Math.sqrt(numero);i++){
+          if(numero % i === 0){ ehPrimo = false; break; }
+        }
+      }
+      viz.innerHTML = "";
+      out.innerHTML = ehPrimo ? `<b>${numero}</b> é primo.` : `<b>${numero}</b> não é primo.`;
+    },
+    code:`let numero = 29;
+let ehPrimo = true;
+
+if (numero < 2) {
+    ehPrimo = false;
+} else {
+    for (let i = 2; i <= Math.sqrt(numero); i++) {
+        if (numero % i === 0) {
+            ehPrimo = false;
+            break;
+        }
+    }
+}
+
+if (ehPrimo) {
+    console.log(numero + " é primo");
+} else {
+    console.log(numero + " não é primo");
+}`
+  },
+  {
+    id:"ordenacao", label:"Ordenação", n:"05",
+    title:"Ordenação por bolha (bubble sort)",
+    desc:"Compara pares vizinhos e troca de posição sempre que estão fora de ordem, até a lista ficar crescente.",
+    fields:[{key:"lista", label:"Lista (separada por vírgula)", value:"5, 2, 9, 1, 7, 3"}],
+    run(vals, viz, out){
+      const lista = parseList(vals.lista);
+      if(lista.some(isNaN)) throw new Error("Use apenas números.");
+      if(lista.length > 14) throw new Error("Use no máximo 14 números.");
+      const arr = lista.slice();
+      for(let i=0;i<arr.length-1;i++){
+        for(let j=0;j<arr.length-1-i;j++){
+          if(arr[j] > arr[j+1]){
+            const t = arr[j]; arr[j]=arr[j+1]; arr[j+1]=t;
+          }
+        }
+      }
+      renderBars(viz, arr, arr.map(()=>false), (v)=>v);
+      out.innerHTML = `Antes: <span class="muted">[${lista.join(", ")}]</span>\nDepois: [${arr.join(", ")}]`;
+    },
+    code:`let lista = [5, 2, 9, 1, 7, 3];
+
+for (let i = 0; i < lista.length - 1; i++) {
+    for (let j = 0; j < lista.length - 1 - i; j++) {
+        if (lista[j] > lista[j + 1]) {
+            let temp = lista[j];
+            lista[j] = lista[j + 1];
+            lista[j + 1] = temp;
+        }
+    }
+}
+
+console.log(lista);`
+  },
+  {
+    id:"soma", label:"Somatório", n:"06",
+    title:"Somatório de uma lista",
+    desc:"Percorre a lista acumulando cada valor em um total.",
+    fields:[{key:"lista", label:"Lista (separada por vírgula)", value:"4, 8, 15, 16, 23, 42"}],
+    run(vals, viz, out){
+      const lista = parseList(vals.lista);
+      if(lista.some(isNaN)) throw new Error("Use apenas números.");
+      let soma = 0;
+      for(const v of lista) soma += v;
+      renderBars(viz, lista, lista.map(()=>false), (v)=>v);
+      out.innerHTML = `A soma total é <b>${soma}</b>.`;
+    },
+    code:`let lista = [4, 8, 15, 16, 23, 42];
+let soma = 0;
+
+for (let i = 0; i < lista.length; i++) {
+    soma = soma + lista[i];
+}
+
+console.log("A soma total é " + soma);`
+  }
+];
+
+function parseList(str){
+  return str.split(",").map(s => Number(s.trim())).filter(s => s.toString() !== "" && !Number.isNaN(s) || s === 0);
+}
+function renderBars(viz, values, hitFlags, get){
+  viz.innerHTML = "";
+  const max = Math.max(...values.map(get), 1);
+  values.forEach((v,i)=>{
+    const val = get(v);
+    const bar = document.createElement("div");
+    bar.className = "bar" + (hitFlags[i] ? " hit" : "");
+    const h = Math.max(10, (val / max) * 90);
+    bar.style.height = h + "px";
+    bar.textContent = val;
+    viz.appendChild(bar);
+  });
+}
+function highlight(code){
+  return code
+    .replace(/\b(let|const|for|if|else|break|return|function)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(\d+)\b/g, '<span class="num">$1</span>');
+}
+
+let current = algos[0].id;
+
+function buildTabs(){
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = "";
+  algos.forEach(a=>{
+    const b = document.createElement("button");
+    b.className = a.id === current ? "active" : "";
+    b.innerHTML = `<span class="n">${a.n}</span><span>${a.label}</span>`;
+    b.onclick = ()=>{ current = a.id; render(); };
+    tabs.appendChild(b);
+  });
+}
+
+function render(){
+  buildTabs();
+  const algo = algos.find(a=>a.id===current);
+  const stage = document.getElementById("stage");
+  stage.innerHTML = `
+    <h2>${algo.title}</h2>
+    <p class="desc">${algo.desc}</p>
+    <div class="controls">
+      ${algo.fields.map(f=>`
+        <div class="field">
+          <label for="in-${f.key}">${f.label}</label>
+          <input id="in-${f.key}" value="${f.value}">
+        </div>`).join("")}
+      <button class="run" id="run-btn">Executar</button>
+    </div>
+    <p class="err" id="err" style="display:none"></p>
+    <div class="viz" id="viz"></div>
+    <div class="out" id="out"><span class="muted">Clique em Executar para ver o resultado.</span></div>
+    <details class="code">
+      <summary>Ver código original</summary>
+      <pre>${highlight(algo.code)}</pre>
+    </details>
+  `;
+  const err = document.getElementById("err");
+  const viz = document.getElementById("viz");
+  const out = document.getElementById("out");
+  function exec(){
+    const vals = {};
+    algo.fields.forEach(f => vals[f.key] = document.getElementById("in-"+f.key).value);
+    try{
+      err.style.display = "none";
+      algo.run(vals, viz, out);
+    }catch(e){
+      viz.innerHTML = "";
+      out.innerHTML = '<span class="muted">Corrija a entrada e execute novamente.</span>';
+      err.textContent = e.message;
+      err.style.display = "block";
+    }
+  }
+  document.getElementById("run-btn").onclick = exec;
+  algo.fields.forEach(f=>{
+    document.getElementById("in-"+f.key).addEventListener("keydown", e=>{ if(e.key==="Enter") exec(); });
+  });
+  exec();
+}
+
+render();
+</script>
+</body>
+</html>
